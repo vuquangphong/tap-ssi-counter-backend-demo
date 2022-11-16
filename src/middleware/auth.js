@@ -1,11 +1,20 @@
-const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 
 const auth = async (req, res, next) => {
     try {
-        // TODO: something...
-    } catch (error) {
-        // TODO: something...
+        const authHeader = req.header('Authorization');
+        const token = authHeader && authHeader.split(' ')[1];
+
+        if (!token) {
+            return res.status(401).json({ message: 'Authentication failed' });
+        }
+
+        const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+        req.userId = decoded.userId;
+        next();
+    } catch (err) {
+        console.log(err);
+        return res.status(401).json({ message: 'Authentication failed' });
     }
 };
 
