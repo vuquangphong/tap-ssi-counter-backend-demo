@@ -11,12 +11,16 @@ const UserSchema = new mongoose.Schema(
             type: String,
             require: true,
         },
-        fullName: {
+        fullname: {
             type: String,
+            require: true,
         },
         age: {
             type: Number,
-        }
+        },
+        refreshToken: {
+            type: String,
+        },
     },
     {
         timestamps: true,
