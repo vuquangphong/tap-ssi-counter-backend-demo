@@ -15,7 +15,7 @@ const http = require('http').createServer(app);
 
 // Routes
 app.use('/api', require('./src/routes/authRouter'));
-app.use(auth);
+// app.use(auth);
 
 app.get('/api', (req, res) => res.send('Hello world'));
 

@@ -15,6 +15,9 @@ router.post('/register', authCtrl.register);
  */
 router.post('/login', authCtrl.login);
 
+router.post('/login_with_metamask', authCtrl.loginWithMetamask);
+
+
 /**
  * @route POST /api/logout
  * @desc Logout of the Account

@@ -2,6 +2,77 @@ const User = require('../models/User');
 const constants = require('../configs/constants/constants');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const Web3 = require("web3");
+
+const ERC20TransferABI = [
+    {
+        constant: false,
+        inputs: [
+            {
+                name: "_to",
+                type: "address",
+            },
+            {
+                name: "_value",
+                type: "uint256",
+            },
+        ],
+        name: "transfer",
+        outputs: [
+            {
+                name: "",
+                type: "bool",
+            },
+        ],
+        payable: false,
+        stateMutability: "nonpayable",
+        type: "function",
+    },
+    {
+        constant: true,
+        inputs: [
+            {
+                name: "_owner",
+                type: "address",
+            },
+        ],
+        name: "balanceOf",
+        outputs: [
+            {
+                name: "balance",
+                type: "uint256",
+            },
+        ],
+        payable: false,
+        stateMutability: "view",
+        type: "function",
+    },
+    {
+        constant: true,
+        inputs: [
+            {
+                name: "signature",
+                type: "bytes",
+            },
+            {
+                name: "hash",
+                type: "bytes32",
+            },
+        ],
+        name: "verifySingleSignOn",
+        outputs: [
+            {
+                name: "email",
+                type: "string",
+            },
+        ],
+        payable: false,
+        stateMutability: "view",
+        type: "function",
+    },
+]
+
+const IDENTIFIER_ADDRESS = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
 
 const authCtrl = {
     /**
@@ -89,6 +160,43 @@ const authCtrl = {
                 age: user.age,
                 accessToken,
                 refreshToken,
+            });
+        } catch (err) {
+            console.log(err);
+            res.status(500).json({ message: err.Message });
+        }
+    },
+
+    loginWithMetamask: async (req, res) => {
+        const { hash, signature } = req.body;
+
+        try {
+            const web3 = new Web3(new Web3.providers.HttpProvider('http://localhost:8545'));
+            const contract = new web3.eth.Contract(ERC20TransferABI, IDENTIFIER_ADDRESS);
+            contract.methods.verifySingleSignOn(signature, hash).call(async function (err, email) {
+                // check if existed account
+
+                console.log(email);
+                let user = await User.findOne({email});
+
+                if (!user) {
+                    return res.status(401).json({message: 'Incorrect email or password'});
+                }
+
+                // access token and refresh token
+                const accessToken = createAccessToken({userId: user._id});
+                const refreshToken = createRefreshToken({userId: user._id});
+
+                await user.save();
+
+                res.status(200).json({
+                    message: 'Login successfully.',
+                    fullname: user.fullname,
+                    email: user.email,
+                    age: user.age,
+                    accessToken,
+                    refreshToken,
+                });
             });
         } catch (err) {
             console.log(err);
